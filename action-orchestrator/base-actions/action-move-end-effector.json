@@ -1,0 +1,7 @@
+[
+    "action-move-end-effector",
+    {
+        "end-effector": "",
+        "waypoints": []
+    }
+]
