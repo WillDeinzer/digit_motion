@@ -19,6 +19,7 @@ async def main(address: str = '127.0.0.1', port: int = 8080, connect_timeout: fl
         info = await api.query(msgs.GetRobotInfo())
         print(f"Robot name: {info.robot_name}")
 
+
         await api.request_privilege("change-action-command")
         reach_action = json.loads('''[
         "action-end-effector-move",
@@ -75,9 +76,9 @@ async def main(address: str = '127.0.0.1', port: int = 8080, connect_timeout: fl
             "waypoints": [
             {
                 "xyz": [
-                0.6,
+                0.5,
                 -0.2,
-                0.2
+                0.1
                 ]
             }
             ],
@@ -115,49 +116,38 @@ async def main(address: str = '127.0.0.1', port: int = 8080, connect_timeout: fl
             "transition-duration": null
         }
         ]''')
+        move_forward = json.loads('''[
+            "action-move",
+            {
+            "velocity": {"axy": [0, 0.5, 0]},
+            "mobility-parameters": {}
+            }
+        ]''')
+        turn_clockwise = json.loads('''[
+            "action-move",
+            {
+            "velocity": {"axy": [-0.5, 0, 0]},
+            "mobility-parameters": {}
+            }
+        ]''')
+        turn_counterclockwise = json.loads('''[
+            "action-move",
+            {
+            "velocity": {"axy": [0.5, 0, 0]},
+            "mobility-parameters": {}
+            }
+        ]''')
+        stop = json.loads('''[
+            "action-move",
+            {
+            "velocity": {"axy": [0, 0, 0]},
+            "mobility-parameters": {}
+            }
+        ]''')
 
-        rotate_90_counter = json.loads('''[
-        "action-goto",
-        {
-            "target": {"rpyxy": [0, 0, 1.570796, 0, 0]},
-            "heading-constraint": null,
-            "reference-frame": {
-            "special-frame": "world"
-            },
-            "position-tolerance": 0.2,
-            "orientation-tolerance": 0.2,
-            "mobility-parameters": {}
-        }
-        ]''')
-        face_forward = json.loads('''[
-        "action-goto",
-        {
-            "target": {"rpyxy": [0, 0, 0, 0, 0]},
-            "heading-constraint": null,
-            "reference-frame": {
-            "special-frame": "world"
-            },
-            "position-tolerance": 0.2,
-            "orientation-tolerance": 0.2,
-            "mobility-parameters": {}
-        }
-        ]''')
-        rotate_90_clock = json.loads('''[
-        "action-goto",
-        {
-            "target": {"rpyxy": [0, 0, -1.570796, 0, 0]},
-            "heading-constraint": null,
-            "reference-frame": {
-            "special-frame": "world"
-            },
-            "position-tolerance": 0.2,
-            "orientation-tolerance": 0.2,
-            "mobility-parameters": {}
-        }
-        ]''')
         action = ""
         while action != "quit":
-            action = await to_thread(input, "Enter an action (reach_comm, retract_comm, award, rotate_90, face_forward) or type 'quit': ")
+            action = await to_thread(input, "Enter an action (reach_comm, retract_comm, award, move_forward, turn_c, turn_cc, stop) or type 'quit': ")
             if action == "quit":
                 break
             elif action == "reach_comm":
@@ -166,10 +156,14 @@ async def main(address: str = '127.0.0.1', port: int = 8080, connect_timeout: fl
                 await api.wait_action(retract_action, remove_after=False)
             elif action == "award":
                 await api.wait_action(award_action, remove_after=False)
-            elif action == "rotate_90":
-                await api.wait_action(rotate_90_counter, remove_after=False)
-            elif action == "face_forward":
-                await api.wait_action(face_forward, remove_after=False)
+            elif action == "move_forward":
+                await api.send(move_forward)
+            elif action == "turn_c":
+                await api.wait_action(turn_clockwise, remove_after=False)
+            elif action == "turn_cc":
+                await api.wait_action(turn_counterclockwise, remove_after=False)
+            elif action == "stop":
+                await api.wait_action(stop, remove_after=False)
             else:
                 await api.wait_action(default_position, remove_after=False)
 
